@@ -1,46 +1,15 @@
 // x86 realmode emurator
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdint.h>
+#include "emulator.h"
+#include "emulator_function.h"
+#include "instruction.h"
 
 // 1MBのメモリサイズ
 #define MEMORY_SIZE (1024 * 1024)
-enum Register { EAX, ECX, EDX, EBX, ESP, EBP, ESI, EDI, REGISTERS_COUNT };
 
 char* registers_name[] = {
     "EAX", "ECX", "EDX", "EBX", "ESP", "EBP", "ESI", "EDI"};
 
-typedef struct{
-  // 汎用レジスタ
-  uint32_t registers[REGISTERS_COUNT];
-  // EFlAGS レジスタ
-  uint32_t eflags;
-  // メモリ
-  uint8_t* memory;
-  // プログラムカウンタ
-  uint32_t eip;
-}Emulator;
-
-
-
-Emulator* create_emu(size_t size, uint32_t eip, uint32_t esp)
-{
-  Emulator* emu = malloc(sizeof(Emulator));
-  emu->memory = malloc(size);
-
-  memset(emu->registers, 0, sizeof(emu->registers));
-  emu->eip = eip;
-  emu->registers[ESP] = esp;
-
-  return emu;
-}
-
-
-void destroy_emu(Emulator* emu){
-  free(emu->memory);
-  free(emu);
-}
 
 /* 汎用レジスタとプログラムカウンタの値を標準出力に出力する */
 static void dump_registers(Emulator* emu){
@@ -49,67 +18,6 @@ static void dump_registers(Emulator* emu){
         printf("%s = %08x\n", registers_name[i], emu->registers[i]);
     }
     printf("EIP = %08x\n", emu->eip);
-}
-
-uint32_t get_code8(Emulator* emu, int index){
-    return emu->memory[emu->eip + index];
-}
-
-int32_t get_sign_code8(Emulator* emu, int index){
-    return (int8_t)emu->memory[emu->eip + index];
-}
-
-
-//リトルエンディアン
-uint32_t get_code32(Emulator* emu, int index){
-    int i;
-    uint32_t ret = 0;
-
-    for (i = 0; i < 4; i++) {
-        ret |= get_code8(emu, index + i) << (i * 8);
-    }
-
-    return ret;
-}
-
-int32_t get_sign_code32(Emulator* emu, int index)
-{
-    return (int32_t)get_code32(emu, index);
-}
-
-
-
-// 特定の32bit レジスタに特定の値(即値)　を設定する。
-void mov_r32_imm32(Emulator* emu){
-  uint8_t reg = get_code8(emu, 0) - 0xB8;//対象のレジスタのインデックス
-  uint32_t value = get_code32(emu, 1);
-  emu->registers[reg] = value;
-  emu->eip +=5;//オペコードのサイズ＋値のサイズ
-}
-
-void short_jump(Emulator* emu){
-  int8_t diff = get_sign_code8(emu, 1);
-  emu->eip += (diff+2);//オペコード+1で2バイトのオフセット
-}
-
-void near_jump(Emulator* emu){
-  int32_t diff = get_sign_code32(emu, 1);
-  emu->eip += (diff+5);
-}
-
-// 関数ポインタ
-typedef void instruction_func_t(Emulator*);
-instruction_func_t* instructions[256]; // 関数ポインタの配列
-void init_instruction(void){
-  int i;
-  memset(instructions, 0, sizeof(instructions));
-  //movを汎用レジスタ分設置する。
-  for (i=0; i<8; i++){
-    instructions[0xB8 + i] = mov_r32_imm32;
-  }
-  instructions[0xE9] = near_jump;
-  instructions[0xEB] = short_jump;
-
 }
 
 

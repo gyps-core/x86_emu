@@ -1,16 +1,18 @@
 TARGET = px86
-OBJS = main.o
+SRCS = $(wildcard *.c)
+OBJS = $(SRCS: .c=.o)
 #Z_TOOLS = ./tolset_p86/z_tools
 
 CC = gcc
 CFLAGS += -m32 -Wall -g
 
-.PHONY: all
-all :
-	make $(TARGET)
+.all : $(TARGET)
 
-%.o : %.c Makefile
-	$(CC) $(CFLAGS) -c $<
-
-$(TARGET) : $(OBJS) Makefile
+$(TARGET) : $(OBJS)
 	$(CC) -m32 -o $@ $(OBJS)
+
+%.o : %.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+clean:
+	rm -f $(OBJS) $(TARGET)
