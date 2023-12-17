@@ -4,6 +4,7 @@
 #include "emulator_function.h"
 #include "instruction.h"
 
+
 // 1MBのメモリサイズ
 #define MEMORY_SIZE (1024 * 1024)
 

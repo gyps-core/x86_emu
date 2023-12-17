@@ -5,6 +5,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stddef.h>
+#include <assert.h>
 
 enum Register { EAX,//算術の結果を格納される
                 ECX,//ループの反復回数を数えるのに用いられる
