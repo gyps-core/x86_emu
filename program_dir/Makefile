@@ -1,4 +1,4 @@
-TARGET = helloworld.bin
+TARGET = modrm-test.bin
 Z_TOOLS = ../tolset_p86/z_tools
 
 CC = gcc
